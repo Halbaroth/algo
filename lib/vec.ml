@@ -5,13 +5,13 @@ module type S = sig
   exception Out_of_bound of int * int
   exception Empty
 
-  val make : int -> el -> t
+  val make : int -> t
   val of_array : el array -> t
   val of_list : el list -> t
   val get : t -> int -> el
   val set : t -> int -> el -> unit
-  val push : t -> el -> unit
-  val pop : t -> unit
+  val push : t -> el list -> unit
+  val pop : int -> t -> unit
   val length : t -> int
   val capacity : t -> int
   val to_array : t -> el array
@@ -27,17 +27,17 @@ module Make (X : Intf.Dummyable) = struct
   exception Out_of_bound of int * int
   exception Empty
 
-  let make size i =
-    { data = Array.init size (fun _ -> i); size }
+  let make size =
+    { data = Array.init size (fun _ -> X.dummy); size }
 
   let to_array { data; size } =
     let copy = Array.init size (fun _ -> X.dummy) in
     Array.blit data 0 copy 0 size;
     copy
 
-  let of_array arr = { data = Array.copy arr; size = Array.length arr }
-
   let of_list lst = { data = Array.of_list lst; size = List.length lst }
+
+  let of_array arr = { data = Array.copy arr; size = Array.length arr }
 
   let to_list { data; size } =
     let rec aux acc = function
@@ -58,6 +58,10 @@ module Make (X : Intf.Dummyable) = struct
     else
       Array.unsafe_set vec.data i v
 
+  let[@inline_always] length { size; _ } = size
+
+  let[@inline_always] capacity { data; _ } = Array.length data
+
   let grow ({ data; size } as vec) cap =
     if cap > Array.length data then
       let data =
@@ -65,24 +69,34 @@ module Make (X : Intf.Dummyable) = struct
       in
       vec.data <- data
 
-  let push ({ data; size } as vec) v =
-    let cap = Array.length data in
-    if cap = size then
-      grow vec (2 * (max cap 1));
-    Array.unsafe_set vec.data size v;
-    vec.size <- size + 1
+  let shrink ({ data; size } as vec) cap =
+    assert (cap >= size);
+    if cap < capacity vec then
+      let arr = Array.init cap (fun _ -> X.dummy) in
+      Array.blit data 0 arr 0 cap;
+      vec.data <- arr
 
-  let pop ({ data; size } as vec) =
-    if vec.size = 0 then raise Empty
+  let push ({ data; size } as vec) lst =
+    let cap = Array.length data in
+    let len = List.length lst in
+    if cap + len = size then
+      grow vec (2 * (max cap 1));
+    List.iter (Array.unsafe_set vec.data size) lst;
+    vec.size <- size + (List.length lst)
+
+  let pop i ({ data; size } as vec) =
+    if size < i then raise Empty
     else
       begin
-        Array.unsafe_set data (size - 1) X.dummy;
-        vec.size <- size - 1
+        if i > 2 * capacity vec then shrink vec i
+        else
+          begin
+            for i = size - i to size - 1 do
+              Array.unsafe_set data i X.dummy
+            done;
+            vec.size <- size - i
+          end
       end
-
-  let[@inline_always] length { size; _ } = size
-
-  let[@inline_always] capacity { data; _ } = Array.length data
 
   let pp fmt { data; _ } =
     let pp_sep fmt () = Format.fprintf fmt "@," in

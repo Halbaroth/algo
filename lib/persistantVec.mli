@@ -2,12 +2,12 @@ module type S = sig
   type t
   type el
 
-  val make : int -> el -> t
+  val make : int -> t
   val of_list : el list -> t
   val get : t -> int -> el
   val set : t -> int -> el -> t
-  val push : t -> el -> t
-  val pop : t -> t
+  val push : t -> el list -> t
+  val pop : int -> t -> t
   val length : t -> int
   val to_array : t -> el array
   val to_list : t -> el list
