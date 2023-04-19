@@ -12,6 +12,32 @@ module type Comparable = sig
   include Printable with type t := t
 end
 
+module type Arr = sig
+  type 'a t
+
+  val make : int -> 'a t
+  val of_list : 'a list -> 'a t
+  val get : 'a t -> int -> 'a
+  val set : 'a t -> int -> 'a -> unit
+  val length : 'a t -> int
+  val to_list : 'a t -> 'a list
+  val pp : 'a Fmt.t -> 'a t Fmt.t
+  val show : 'a Fmt.t -> 'a t -> string
+end
+
+module type PersistentArr = sig
+  type 'a t
+
+  val make : int -> 'a t
+  val of_list : 'a list -> 'a t
+  val get : 'a t -> int -> 'a
+  val set : 'a t -> int -> 'a -> 'a t
+  val length : 'a t -> int
+  val to_list : 'a t -> 'a list
+  val pp : 'a Fmt.t -> 'a t Fmt.t
+  val show : 'a Fmt.t -> 'a t -> string
+end
+
 module type Vec = sig
   type 'a t
 

@@ -1,111 +1,75 @@
-module type S = sig
-  type t
-  type el
+module Make (A : Intf.Arr) = struct
+  type 'a t = 'a data ref
 
-  val make : int -> el -> t
-  val of_list : el list -> t
-  val get : t -> int -> el
-  val set : t -> int -> el -> t
-  val length : t -> int
-  val to_array : t -> el array
-
-  include Intf.Printable with type t := t
-end
-
-module type Container = sig
-  type data
-  type t = data ref
-  type el
-
-  val mk_arr : el array -> data
-  val mk_diff : int -> el -> t -> data
-
-  val reroot : t -> el array
-end
-
-module M (X : Intf.Printable) (C : Container with type el = X.t) = struct
-  let make size i = ref (C.mk_arr (Array.init size (fun _ -> i)))
-
-  let of_list lst = ref (C.mk_arr (Array.of_list lst))
-
-  let length arr = C.reroot arr |> Array.length
-
-  let get arr i = (C.reroot arr).(i)
-
-  let set arr i v =
-    let a = C.reroot arr in
-    let old = a.(i) in
-    a.(i) <- v;
-    let res = ref (C.mk_arr a) in
-    arr := C.mk_diff i old res;
-    res
-
-  let to_array arr = C.reroot arr |> Array.copy
-
-  let pp fmt arr =
-    let pp_sep fmt () = Format.fprintf fmt "@," in
-    C.reroot arr
-    |> Array.to_list
-    |> Format.pp_print_list ~pp_sep X.pp fmt
-
-  let show = Format.asprintf "%a" pp
-end
-
-module Make (X : Intf.Printable) = struct
-  type el = X.t
-  type t = data ref
-
-  and data =
-    | Arr of X.t array
-    | Diff of int * X.t * t
-
-  include M (X) (struct
-    type el = X.t
-    type nonrec data = data
-    type nonrec t = t
-
-    let mk_arr a = Arr a
-    let mk_diff i v arr = Diff (i, v, arr)
-
-    let rec reroot arr =
-      match !arr with
-      | Arr a -> a
-      | Diff (i, v, arr') ->
-          let a = reroot arr' in
-          let old = a.(i) in
-          a.(i) <- v;
-          arr := Arr a;
-          arr' := Diff (i, old, arr);
-          a
-  end)
-end
-
-module MakeSemi (X : Intf.Printable) = struct
-  type el = X.t
-  type t = data ref
-
-  and data =
-    | Arr of X.t array
-    | Diff of int * X.t * t
+  and 'a data =
+    | Arr of 'a A.t
+    | Diff of int * 'a * 'a t
     | Invalid
 
-  include M (X) (struct
-    type el = X.t
-    type nonrec data = data
-    type nonrec t = t
+  let assert_arr arr k =
+    match !arr with
+    | Arr a -> k a
+    | _ -> assert false
 
-    let mk_arr a = Arr a
-    let mk_diff i v arr = Diff (i, v, arr)
+  module Make (R : sig val reroot : 'a t -> unit end) = struct
+    type nonrec 'a t = 'a t
 
+    let make size = ref (Arr (A.make size))
+
+    let of_list lst = ref (Arr (A.of_list lst))
+
+    let length arr =
+      R.reroot arr;
+      assert_arr arr A.length
+
+    let get arr i =
+      R.reroot arr;
+      assert_arr arr @@ fun a -> A.get a i
+
+    let set arr i v =
+      R.reroot arr;
+      assert_arr arr @@ fun a ->
+        let old = A.get a i in
+        A.set a i v;
+        let res = ref (Arr a) in
+        arr := Diff (i, old, res);
+        res
+
+    let to_list arr =
+      R.reroot arr;
+      assert_arr arr A.to_list
+
+    let pp pp_elt fmt arr =
+      R.reroot arr;
+      assert_arr arr (Format.fprintf fmt "%a" (A.pp pp_elt))
+
+    let show pp_elt = Format.asprintf "%a" (pp pp_elt)
+  end
+
+  module P = Make (struct
     let rec reroot arr =
       match !arr with
-      | Arr a -> a
+      | Arr _ -> ()
       | Diff (i, v, arr') ->
-          let a = reroot arr' in
-          a.(i) <- v;
-          arr := Arr a;
-          arr' := Invalid;
-          a
+          reroot arr';
+          assert_arr arr' @@ fun a ->
+            let old = A.get a i in
+            A.set a i v;
+            arr := Arr a;
+            arr' := Diff (i, old, arr)
+      | Invalid -> assert false
+  end)
+
+  module SP = Make (struct
+    let rec reroot arr =
+      match !arr with
+      | Arr _ -> ()
+      | Diff (i, v, arr') ->
+          reroot arr';
+          assert_arr arr' @@ fun a ->
+            A.set a i v;
+            arr := Arr a;
+            arr' := Invalid
       | Invalid -> failwith "inaccessible semipersistant array"
   end)
 end
