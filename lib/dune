@@ -1,4 +1,3 @@
 (library
- (package algo)
- (name algo)
+ (public_name algo)
  (libraries fmt))
