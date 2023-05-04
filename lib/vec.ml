@@ -72,6 +72,7 @@ let pop ({ size; _ } as vec) =
     end
 
 let exists pred { data; size; _ } =
+  let exception Exit in
   try
     for i = 0 to size-1 do
       if pred (Array.unsafe_get data i) then raise Exit
