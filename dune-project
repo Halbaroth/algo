@@ -23,6 +23,7 @@
    ocaml
    dune
    core_bench
+   ppx_inline_test
    fmt
    logs)
  (tags

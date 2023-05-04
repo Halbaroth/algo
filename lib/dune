@@ -1,3 +1,5 @@
 (library
  (public_name algo)
- (libraries fmt))
+ (libraries fmt)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test)))

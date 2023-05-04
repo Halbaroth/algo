@@ -13,6 +13,7 @@ depends: [
   "ocaml"
   "dune" {>= "3.7"}
   "core_bench"
+  "ppx_inline_test"
   "fmt"
   "logs"
   "odoc" {with-doc}

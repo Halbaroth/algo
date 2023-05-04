@@ -3,8 +3,8 @@ type 'a t = { mutable data : 'a array; mutable size : int; dummy : 'a }
 exception OutOfBound of int * int
 exception Empty
 
-let make ~dummy size =
-  { data = Array.init size (fun _ -> dummy); size; dummy }
+let make ~dummy cap =
+  { data = Array.init cap (fun _ -> dummy); size = 0; dummy }
 
 let of_array ~dummy arr =
   { data = Array.copy arr; size = Array.length arr; dummy }
@@ -58,6 +58,10 @@ let push ({ size; _ } as vec) v =
     grow vec (2 * (max cap 1));
   Array.unsafe_set vec.data size v;
   vec.size <- size + 1
+
+let%test "push" =
+  let vec = make ~dummy:0 50 in
+  Int.equal (push vec 1; get vec 0) 1
 
 let pop ({ size; _ } as vec) =
   if size = 0 then raise Empty
