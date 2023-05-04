@@ -81,8 +81,9 @@ let exists pred { data; size; _ } =
 
 let for_all pred vec = not @@ exists (fun elt -> not @@ pred elt) vec
 
-let pp pp_elt fmt { data; _ } =
+let pp pp_elt fmt { data; size; _ } =
   let pp_sep fmt () = Format.fprintf fmt "@," in
-  Format.pp_print_list ~pp_sep pp_elt fmt (Array.to_list data)
+  let lst = Array.(sub data 0 size |> to_list) in
+  Format.pp_print_list ~pp_sep pp_elt fmt lst
 
 let show pp_elt = Format.asprintf "%a" (pp pp_elt)
