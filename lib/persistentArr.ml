@@ -1,4 +1,4 @@
-module Make (A : Intf.Arr) = struct
+module InternalMake (A : Intf.Arr) = struct
   type 'a t = 'a data ref
 
   and 'a data =
@@ -46,7 +46,7 @@ module Make (A : Intf.Arr) = struct
     let show pp_elt = Format.asprintf "%a" (pp pp_elt)
   end
 
-  module P = Make (struct
+  module Persistent = Make (struct
     let rec reroot arr =
       match !arr with
       | Arr _ -> ()
@@ -60,7 +60,7 @@ module Make (A : Intf.Arr) = struct
       | Invalid -> assert false
   end)
 
-  module SP = Make (struct
+  module SemiPersistent = Make (struct
     let rec reroot arr =
       match !arr with
       | Arr _ -> ()
@@ -70,6 +70,16 @@ module Make (A : Intf.Arr) = struct
             A.set a i v;
             arr := Arr a;
             arr' := Invalid
-      | Invalid -> failwith "inaccessible semipersistant array"
+      | Invalid -> failwith "inaccessible semipersistent array"
   end)
+end
+
+module Make (A : Intf.Arr) = struct
+  module M = InternalMake (A)
+  include M.Persistent
+end
+
+module MakeSemi (A : Intf.Arr) = struct
+  module M = InternalMake (A)
+  include M.SemiPersistent
 end

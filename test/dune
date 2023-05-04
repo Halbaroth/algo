@@ -1,2 +1,3 @@
 (test
- (name algo))
+ (name algo)
+ (libraries algo core core_unix.command_unix core_bench))

@@ -1,4 +1,4 @@
-module Make (V : Intf.Vec) = struct
+module InternalMake (V : Intf.Vec) = struct
   type 'a t = 'a data ref
 
   and 'a data =
@@ -69,12 +69,12 @@ module Make (V : Intf.Vec) = struct
 
     let pp pp_elt fmt vec =
       R.reroot vec;
-      assert_vec vec (Format.fprintf fmt "%a" (V.pp pp_elt))
+      assert_vec vec (V.pp pp_elt fmt)
 
     let show pp_elt = Format.asprintf "%a" (pp pp_elt)
   end
 
-  module P = Make (struct
+  module Persistent = Make (struct
     let rec reroot vec =
       match !vec with
       | Vec _ -> ()
@@ -101,7 +101,7 @@ module Make (V : Intf.Vec) = struct
       | Invalid -> assert false
   end)
 
-  module SP = Make (struct
+  module SemiPersistent = Make (struct
     let rec reroot vec =
       match !vec with
       | Vec _ -> ()
@@ -123,6 +123,16 @@ module Make (V : Intf.Vec) = struct
             V.push vc v;
             vec := Vec vc;
             vec' := Invalid
-      | Invalid -> failwith "inaccessible semipersistant vector"
+      | Invalid -> failwith "inaccessible semipersistent vector"
   end)
+end
+
+module Make (V : Intf.Vec) = struct
+  module M = InternalMake (V)
+  include M.Persistent
+end
+
+module MakeSemi (V : Intf.Vec) = struct
+  module M = InternalMake (V)
+  include M.SemiPersistent
 end

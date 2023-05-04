@@ -76,3 +76,29 @@ module type PersistentVec = sig
   val pp : 'a Fmt.t -> 'a t Fmt.t
   val show : 'a Fmt.t -> 'a t -> string
 end
+
+module type HashTbl = sig
+  type 'a t
+  type key
+
+  val make : int -> 'a t
+  val length : 'a t -> int
+  val lookup : 'a t -> key -> 'a
+  val add : 'a t -> key -> 'a -> unit
+  val remove : 'a t -> key -> unit
+  val pp : 'a Fmt.t -> 'a t Fmt.t
+  val show : 'a Fmt.t -> 'a t -> string
+end
+
+module type PersistentHashTbl = sig
+  type 'a t
+  type key
+
+  val make : int -> 'a t
+  val length : 'a t -> int
+  val lookup : 'a t -> key -> 'a option
+  val add : 'a t -> key -> 'a -> 'a t
+  val remove : 'a t -> key -> 'a t
+  val pp : 'a Fmt.t -> 'a t Fmt.t
+  val show : 'a Fmt.t -> 'a t -> string
+end

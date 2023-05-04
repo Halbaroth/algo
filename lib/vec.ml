@@ -47,15 +47,13 @@ let grow ({ data; size; dummy } as vec) cap =
     in
     vec.data <- data
 
-let shrink ({ data; size; dummy } as vec) cap =
+let shrink ({ data; size; _ } as vec) cap =
   assert (cap >= size);
   if cap < capacity vec then
-    let arr = Array.init cap (fun _ -> dummy) in
-    Array.blit data 0 arr 0 cap;
-    vec.data <- arr
+    vec.data <- Array.init cap (fun i -> data.(i))
 
-let push ({ data; size; _ } as vec) v =
-  let cap = Array.length data in
+let push ({ size; _ } as vec) v =
+  let cap = Array.length vec.data in
   if cap = size then
     grow vec (2 * (max cap 1));
   Array.unsafe_set vec.data size v;
