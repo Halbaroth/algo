@@ -67,6 +67,14 @@ module InternalMake (V : Intf.Vec) = struct
       R.reroot vec;
       assert_vec vec V.to_list
 
+    let exists pred vec =
+      R.reroot vec;
+      assert_vec vec (V.exists pred)
+
+    let for_all pred vec =
+      R.reroot vec;
+      assert_vec vec (V.for_all pred)
+
     let pp pp_elt fmt vec =
       R.reroot vec;
       assert_vec vec (V.pp pp_elt fmt)

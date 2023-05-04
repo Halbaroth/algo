@@ -1,6 +1,6 @@
 type 'a t = { mutable data : 'a array; mutable size : int; dummy : 'a }
 
-exception Out_of_bound of int * int
+exception OutOfBound of int * int
 exception Empty
 
 let make ~dummy size =
@@ -26,13 +26,13 @@ let to_list { data; size; _ } =
 
 let get vec i =
   if i < 0 || i >= vec.size then
-    raise (Out_of_bound (i, vec.size))
+    raise (OutOfBound (i, vec.size))
   else
     Array.unsafe_get vec.data i
 
 let set vec i v =
   if i < 0 || i >= vec.size then
-    raise (Out_of_bound (i, vec.size))
+    raise (OutOfBound (i, vec.size))
   else
     Array.unsafe_set vec.data i v
 
@@ -66,6 +66,16 @@ let pop ({ size; _ } as vec) =
       if 2 * size < capacity vec then shrink vec size
       else vec.size <- size - 1
     end
+
+let exists pred { data; size; _ } =
+  try
+    for i = 0 to size-1 do
+      if pred (Array.unsafe_get data i) then raise Exit
+    done;
+    false
+  with Exit -> true
+
+let for_all pred vec = not @@ exists (fun elt -> not @@ pred elt) vec
 
 let pp pp_elt fmt { data; _ } =
   let pp_sep fmt () = Format.fprintf fmt "@," in

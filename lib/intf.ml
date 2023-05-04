@@ -41,7 +41,7 @@ end
 module type Vec = sig
   type 'a t
 
-  exception Out_of_bound of int * int
+  exception OutOfBound of int * int
   exception Empty
 
   val make : dummy:'a -> int -> 'a t
@@ -55,6 +55,8 @@ module type Vec = sig
   val capacity : 'a t -> int
   val to_array : 'a t -> 'a array
   val to_list : 'a t -> 'a list
+  val exists : ('a -> bool) -> 'a t -> bool
+  val for_all : ('a -> bool) -> 'a t -> bool
   val pp : 'a Fmt.t -> 'a t Fmt.t
   val show : 'a Fmt.t -> 'a t -> string
 end
@@ -73,6 +75,8 @@ module type PersistentVec = sig
   val capacity : 'a t -> int
   val to_array : 'a t -> 'a array
   val to_list : 'a t -> 'a list
+  val exists : ('a -> bool) -> 'a t -> bool
+  val for_all : ('a -> bool) -> 'a t -> bool
   val pp : 'a Fmt.t -> 'a t Fmt.t
   val show : 'a Fmt.t -> 'a t -> string
 end
