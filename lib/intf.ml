@@ -55,8 +55,10 @@ module type Vec = sig
   val capacity : 'a t -> int
   val to_array : 'a t -> 'a array
   val to_list : 'a t -> 'a list
-  val exists : ('a -> bool) -> 'a t -> bool
-  val for_all : ('a -> bool) -> 'a t -> bool
+  val iter : f:('a -> unit) -> 'a t -> unit
+  val fold_left : f:('b -> 'a -> 'b) -> init:'b -> 'a t -> 'b
+  val exists : f:('a -> bool) -> 'a t -> bool
+  val for_all : f:('a -> bool) -> 'a t -> bool
   val pp : 'a Fmt.t -> 'a t Fmt.t
   val show : 'a Fmt.t -> 'a t -> string
 end
@@ -75,8 +77,10 @@ module type PersistentVec = sig
   val capacity : 'a t -> int
   val to_array : 'a t -> 'a array
   val to_list : 'a t -> 'a list
-  val exists : ('a -> bool) -> 'a t -> bool
-  val for_all : ('a -> bool) -> 'a t -> bool
+  val iter : f:('a -> unit) -> 'a t -> unit
+  val fold_left : f:('b -> 'a -> 'b) -> init:'b -> 'a t -> 'b
+  val exists : f:('a -> bool) -> 'a t -> bool
+  val for_all : f:('a -> bool) -> 'a t -> bool
   val pp : 'a Fmt.t -> 'a t Fmt.t
   val show : 'a Fmt.t -> 'a t -> string
 end

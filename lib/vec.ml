@@ -12,10 +12,7 @@ let of_array ~dummy arr =
 let of_list ~dummy lst =
   { data = Array.of_list lst; size = List.length lst; dummy }
 
-let to_array { data; size; dummy } =
-  let copy = Array.init size (fun _ -> dummy) in
-  Array.blit data 0 copy 0 size;
-  copy
+let to_array { data; size; _ } = Array.sub data 0 size
 
 let to_list { data; size; _ } =
   let rec aux acc = function
@@ -59,9 +56,23 @@ let push ({ size; _ } as vec) v =
   Array.unsafe_set vec.data size v;
   vec.size <- size + 1
 
-let%test "push" =
+let%test "push1" =
   let vec = make ~dummy:0 50 in
   Int.equal (push vec 1; get vec 0) 1
+
+let%test "push2" =
+  let vec = make ~dummy:0 50 in
+  for i = 0 to 99 do
+    push vec i
+  done;
+  Int.equal (length vec) 100
+
+let%test "push3" =
+  let vec = make ~dummy:0 50 in
+  for i = 0 to 99 do
+    push vec i
+  done;
+  Int.equal (get vec 65) 65
 
 let pop ({ size; _ } as vec) =
   if size = 0 then raise Empty
@@ -71,16 +82,28 @@ let pop ({ size; _ } as vec) =
       else vec.size <- size - 1
     end
 
-let exists pred { data; size; _ } =
+let exists ~f { data; size; _ } =
   let exception Exit in
   try
     for i = 0 to size-1 do
-      if pred (Array.unsafe_get data i) then raise Exit
+      if f (Array.unsafe_get data i) then raise Exit
     done;
     false
   with Exit -> true
 
-let for_all pred vec = not @@ exists (fun elt -> not @@ pred elt) vec
+let for_all ~f vec = not @@ exists ~f:(fun elt -> not @@ f elt) vec
+
+let iter ~f { data; size; _ } =
+  for i = 0 to size-1 do
+    f (Array.unsafe_get data i)
+  done
+
+let fold_left ~f ~init { data; size; _ } =
+  let acc = ref init in
+  for i = 0 to size-1 do
+    acc := f !acc (Array.unsafe_get data i)
+  done;
+  !acc
 
 let pp pp_elt fmt { data; size; _ } =
   let pp_sep fmt () = Format.fprintf fmt "@," in
