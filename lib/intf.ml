@@ -41,9 +41,6 @@ end
 module type Vec = sig
   type 'a t
 
-  exception OutOfBound of int * int
-  exception Empty
-
   val make : dummy:'a -> int -> 'a t
   val of_array : dummy:'a -> 'a array -> 'a t
   val of_list : dummy:'a -> 'a list -> 'a t
@@ -56,7 +53,8 @@ module type Vec = sig
   val to_array : 'a t -> 'a array
   val to_list : 'a t -> 'a list
   val iter : f:('a -> unit) -> 'a t -> unit
-  val fold_left : f:('b -> 'a -> 'b) -> init:'b -> 'a t -> 'b
+  val iteri : f:(int -> 'a -> unit) -> 'a t -> unit
+  val fold : f:('b -> 'a -> 'b) -> init:'b -> 'a t -> 'b
   val exists : f:('a -> bool) -> 'a t -> bool
   val for_all : f:('a -> bool) -> 'a t -> bool
   val pp : 'a Fmt.t -> 'a t Fmt.t
@@ -77,6 +75,7 @@ module type PersistentVec = sig
   val capacity : 'a t -> int
   val to_array : 'a t -> 'a array
   val to_list : 'a t -> 'a list
+  val iteri : f:(int -> 'a -> unit) -> 'a t -> unit
   val iter : f:('a -> unit) -> 'a t -> unit
   val fold_left : f:('b -> 'a -> 'b) -> init:'b -> 'a t -> 'b
   val exists : f:('a -> bool) -> 'a t -> bool

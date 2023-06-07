@@ -71,9 +71,13 @@ module InternalMake (V : Intf.Vec) = struct
       R.reroot vec;
       assert_vec vec (V.iter ~f)
 
+    let iteri ~f vec =
+      R.reroot vec;
+      assert_vec vec (V.iteri ~f)
+
     let fold_left ~f ~init vec =
       R.reroot vec;
-      assert_vec vec (V.fold_left ~f ~init)
+      assert_vec vec (V.fold ~f ~init)
 
     let exists ~f vec =
       R.reroot vec;
